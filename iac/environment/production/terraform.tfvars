@@ -1,0 +1,17 @@
+region              = "eu-west-2"
+project             = "call-records"
+environment         = "production"
+service_name        = "service"
+hostzone            = "iposg.com"
+cpu                 = 512
+memory              = 2048
+enable_auto_scaling = false
+max_capacity        = 1
+min_capacity        = 1
+desired_count       = 1
+host_header         = "call-records.iposg.com" # ALB Value
+subdomain_name      = "call-records" # Route53 Value
+#nginx_image_tag  = "call-records-production-service:nginx-7960f"
+#phpapp_image_tag = "call-records-production-service:php-7960f"
+database_secrets    = "iposg-database-secrets"
+common_secrets      = "common-secret-keys"

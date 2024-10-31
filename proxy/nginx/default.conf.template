@@ -1,0 +1,71 @@
+server {
+    listen 80;
+
+    server_name localhost;
+    root /var/www/html/public;     # Point to the public folder of your Laravel app
+
+    index index.php index.html index.htm;
+
+    client_body_buffer_size 64M;   # Adjust as needed
+    client_max_body_size 128M;     # Adjust as needed
+    client_body_timeout 300s;      # Time to wait for the client to send body
+    client_header_timeout 300s;    # Time to wait for the client to send headers
+    send_timeout 300s;             # Time to send response to the client
+    keepalive_timeout 300s;        # Timeout for keep-alive connections
+
+    charset utf-8;
+
+    # error_log /var/www/html/storage/logs/error.log error;
+    # access_log /var/www/html/storage/logs/warning.log warn;
+
+    # Ensure that Laravel routes are correctly handled
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+
+        # Proxy settings to handle timeouts
+        proxy_read_timeout 300s;    # Adjust time for reading response from backend
+        proxy_send_timeout 300s;    # Adjust time to send request to backend
+        proxy_connect_timeout 300s; # Adjust time for connecting to backend
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ [^/]\.php(/|$) {
+        fastcgi_split_path_info ^(.+?\.php)(/.*)$;
+        if (!-f $document_root$fastcgi_script_name) {
+            return 404;
+        }
+
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+        fastcgi_param PATH_TRANSLATED $document_root$fastcgi_path_info;
+
+        fastcgi_read_timeout 600s;
+        fastcgi_pass ${BACKEND_URL}; # Replace with actual backend address or service
+        fastcgi_index index.php;
+        fastcgi_buffers 16 128k;
+        fastcgi_buffer_size 512k;
+        fastcgi_busy_buffers_size 512k;
+        fastcgi_keep_conn on;
+    }
+
+    # Disable access to hidden files and folders
+    location ~ /\.ht {
+        deny all;
+    }
+
+    # Cache static files for a longer time for performance
+    location ~* \.(jpg|jpeg|gif|png|css|js|ico|svg|ttf|woff|eot)$ {
+        expires 1d;
+        access_log off;
+    }
+
+    # Gzip compression for performance
+    gzip on;
+    gzip_types text/css application/javascript image/svg+xml;
+    gzip_min_length 1000;
+}
